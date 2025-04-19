@@ -22,11 +22,11 @@ app.post("/chat", async (req, res) => {
         const { message } = req.body;
         if (!message) return res.status(400).json({ error: "Message is required" });
 
-        const model = genAI.getGenerativeModel({ model: "gemini-2.0-flash" });
-        
-        const result = await model.generateContent({ 
-            systemInstruction: CHAT_PROMPT,
-            contents: [{ parts: [{ text: message }] }] });
+            const model = genAI.getGenerativeModel({ model: "gemini-2.0-flash" });
+            
+            const result = await model.generateContent({ 
+                systemInstruction: CHAT_PROMPT,
+                contents: [{ parts: [{ text: message }] }] });
 
         res.json({ reply: result.response.candidates[0].content.parts[0].text || "No response" });
     } catch (error) {
