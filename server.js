@@ -2,12 +2,10 @@ import express from "express";
 import cors from "cors";
 import dotenv from "dotenv";
 import { GoogleGenerativeAI } from "@google/generative-ai";
-import CHAT_PROMPT from "./prompt.js"
-
+import CHAT_PROMPT from "./prompt.js";
 
 const app = express();
-app.use(cors());
-app.use(express.json());
+
 dotenv.config();
 
 if (!process.env.GEMINI_API_KEY) {
@@ -15,18 +13,28 @@ if (!process.env.GEMINI_API_KEY) {
     process.exit(1);
 }
 
+app.use(cors({
+  origin: ['http://localhost:5173', 'https://your-frontend-app.onrender.com'],
+  methods: ['GET', 'POST'],
+  allowedHeaders: ['Content-Type'],
+}));
+
+app.use(express.json());
+
 const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY);
 
 app.post("/chat", async (req, res) => {
     try {
         const { message } = req.body;
+
         if (!message) return res.status(400).json({ error: "Message is required" });
 
-            const model = genAI.getGenerativeModel({ model: "gemini-2.0-flash" });
-            
-            const result = await model.generateContent({ 
-                systemInstruction: CHAT_PROMPT,
-                contents: [{ parts: [{ text: message }] }] });
+        const model = genAI.getGenerativeModel({ model: "gemini-2.0-flash" });
+
+        const result = await model.generateContent({
+            systemInstruction: CHAT_PROMPT,
+            contents: [{ parts: [{ text: message }] }]
+        });
 
         res.json({ reply: result.response.candidates[0].content.parts[0].text || "No response" });
     } catch (error) {
@@ -35,4 +43,7 @@ app.post("/chat", async (req, res) => {
     }
 });
 
-app.listen(process.env.PORT || 5000, () => console.log("Server running..."));
+const port = process.env.PORT || 5000;
+app.listen(port, () => {
+    console.log(`Server running on port ${port}`);
+});
